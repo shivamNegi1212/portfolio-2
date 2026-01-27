@@ -17,7 +17,12 @@ export const Contact = () => {
 
   useEffect(() => {
     // Initialize EmailJS with your public key
-    emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || "default_key");
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    if (publicKey) {
+      emailjs.init(publicKey);
+    } else {
+      console.warn("EmailJS public key is not set. Please add NEXT_PUBLIC_EMAILJS_PUBLIC_KEY to your environment variables.");
+    }
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -34,6 +39,13 @@ export const Contact = () => {
     setMessage("");
 
     try {
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+
+      if (!serviceId || !templateId) {
+        throw new Error("EmailJS configuration is missing. Please set NEXT_PUBLIC_EMAILJS_SERVICE_ID and NEXT_PUBLIC_EMAILJS_TEMPLATE_ID environment variables.");
+      }
+
       // Prepare template parameters for EmailJS
       const templateParams = {
         to_email: "negishivam066@gmail.com",
@@ -45,8 +57,8 @@ export const Contact = () => {
       };
 
       const response = await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "service_g3qd7lm",
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "template_contact",
+        serviceId,
+        templateId,
         templateParams
       );
 
@@ -62,7 +74,8 @@ export const Contact = () => {
         setMessage("❌ Failed to send message. Please try again.");
       }
     } catch (error) {
-      setMessage("❌ Error sending message. Please check your email and try again later.");
+      const errorMsg = error instanceof Error ? error.message : "Error sending message. Please try again later.";
+      setMessage(`❌ ${errorMsg}`);
       console.error("EmailJS Error:", error);
     } finally {
       setIsLoading(false);
