@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import emailjs from "emailjs-com";
 
 export const Contact = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,11 @@ export const Contact = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    // Initialize EmailJS with your public key
+    emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || "default_key");
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -28,16 +34,24 @@ export const Contact = () => {
     setMessage("");
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      // Prepare template parameters for EmailJS
+      const templateParams = {
+        to_email: "negishivam066@gmail.com",
+        from_name: formData.name,
+        from_email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        reply_to: formData.email,
+      };
 
-      if (response.ok) {
-        setMessage("Message sent successfully! I'll get back to you soon.");
+      const response = await emailjs.send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "service_g3qd7lm",
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "template_contact",
+        templateParams
+      );
+
+      if (response.status === 200) {
+        setMessage("✅ Message sent successfully! I'll get back to you soon.");
         setFormData({
           name: "",
           email: "",
@@ -45,11 +59,11 @@ export const Contact = () => {
           message: "",
         });
       } else {
-        setMessage("Failed to send message. Please try again.");
+        setMessage("❌ Failed to send message. Please try again.");
       }
     } catch (error) {
-      setMessage("Error sending message. Please try again later.");
-      console.error("Error:", error);
+      setMessage("❌ Error sending message. Please check your email and try again later.");
+      console.error("EmailJS Error:", error);
     } finally {
       setIsLoading(false);
     }
