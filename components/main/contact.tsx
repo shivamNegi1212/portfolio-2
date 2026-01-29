@@ -74,7 +74,7 @@ export const Contact = () => {
         setMessage("❌ Failed to send message. Please try again.");
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Error sending message. Please try again later.";
+      const errorMsg = error instanceof Error ? error.message : "इस्पे अभी काम चल रहा Mial या WhatsApp कर सकते हो";
       setMessage(`❌ ${errorMsg}`);
       console.error("EmailJS Error:", error);
     } finally {
